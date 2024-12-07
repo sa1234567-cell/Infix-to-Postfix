@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infix to Postfix Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 10px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .steps, .visuals {
+            margin-top: 20px;
+        }
+        .step, .visual {
+            margin-bottom: 15px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .code {
+            background-color: #f8f9fa;
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+        .final {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #d4edda;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Infix to Postfix Converter</h1>
+
+    <!-- Input field for infix expression -->
+    <label for="infixInput"><strong>Enter Infix Expression:</strong></label>
+    <input type="text" id="infixInput" placeholder="Enter expression like a + b * c + d" style="width: 98%; padding: 10px; margin: 10px 0; border-radius: 5px;">
+    <button onclick="convertInfixToPostfix()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px;">Convert</button>
+
+    <div class="visuals">
+        <h3>Visual Representation:</h3>
+        <div id="visuals"></div>
+    </div>
+
+    <div class="steps">
+        <h3>Step-by-Step Conversion:</h3>
+        <div id="steps"></div>
+    </div>
+
+    <div class="final">
+        <h3>Final Postfix Expression:</h3>
+        <p id="final-postfix"></p>
+    </div>
+</div>
+
+<script>
+    function convertInfixToPostfix() {
+        const infix = document.getElementById('infixInput').value.trim();
+        if (!infix) {
+            alert("Please enter a valid infix expression!");
+            return;
+        }
+
+        // Convert input to lowercase and remove all spaces for uniform processing
+        const normalizedInfix = infix.replace(/\s+/g, '').toLowerCase();
+        
+        const precedence = {
+            '+': 1,
+            '-': 1,
+            '*': 2,
+            '/': 2,
+            '^': 3
+        };
+
+        function infixToPostfix(infix) {
+            let stack = [];
+            let postfix = [];
+            let steps = [];
+            let visuals = [];
+
+            // Regex to split the expression into tokens
+            const tokens = infix.match(/[a-zA-Z0-9]+|[+\-*/^()]/g);
+
+            tokens.forEach((token) => {
+                if (/[a-zA-Z0-9]/.test(token)) { // Operand (variable or number)
+                    postfix.push(token);
+                    steps.push({
+                        action: `Add operand '${token}' to postfix expression.`,
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        token: token
+                    });
+                    visuals.push({
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                    });
+                } else if (token === '(') { // Left Parenthesis
+                    stack.push(token);
+                    steps.push({
+                        action: `Push operator '${token}' onto the stack.`,
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        token: token
+                    });
+                    visuals.push({
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                    });
+                } else if (token === ')') { // Right Parenthesis
+                    while (stack.length && stack[stack.length - 1] !== '(') {
+                        postfix.push(stack.pop());
+                        steps.push({
+                            action: `Pop operator from stack to postfix.`,
+                            postfix: postfix.join(''),
+                            stack: stack.join(''),
+                            token: token
+                        });
+                        visuals.push({
+                            postfix: postfix.join(''),
+                            stack: stack.join(''),
+                            code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                        });
+                    }
+                    stack.pop(); // Remove '(' from stack
+                    steps.push({
+                        action: `Pop '(' from the stack.`,
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        token: token
+                    });
+                    visuals.push({
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                    });
+                } else { // Operator
+                    while (stack.length && precedence[stack[stack.length - 1]] >= precedence[token]) {
+                        postfix.push(stack.pop());
+                        steps.push({
+                            action: `Pop operator with higher precedence and add it to postfix.`,
+                            postfix: postfix.join(''),
+                            stack: stack.join(''),
+                            token: token
+                        });
+                        visuals.push({
+                            postfix: postfix.join(''),
+                            stack: stack.join(''),
+                            code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                        });
+                    }
+                    stack.push(token);
+                    steps.push({
+                        action: `Push operator '${token}' onto the stack.`,
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        token: token
+                    });
+                    visuals.push({
+                        postfix: postfix.join(''),
+                        stack: stack.join(''),
+                        code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                    });
+                }
+            });
+
+            // Pop all remaining operators in the stack to postfix
+            while (stack.length) {
+                postfix.push(stack.pop());
+                steps.push({
+                    action: `Pop remaining operators from stack to postfix.`,
+                    postfix: postfix.join(''),
+                    stack: stack.join(''),
+                    token: ''
+                });
+                visuals.push({
+                    postfix: postfix.join(''),
+                    stack: stack.join(''),
+                    code: `Postfix: ${postfix.join('')}<br>Stack: ${stack.join('')}`
+                });
+            }
+
+            return { postfix: postfix.join(''), steps, visuals };
+        }
+
+        // Get conversion result
+        const { postfix, steps, visuals } = infixToPostfix(normalizedInfix);
+
+        // Clear previous results
+        document.getElementById('steps').innerHTML = '';
+        document.getElementById('visuals').innerHTML = '';
+        document.getElementById('final-postfix').textContent = '';
+
+        // Display steps
+        const stepsDiv = document.getElementById('steps');
+        steps.forEach(step => {
+            const stepDiv = document.createElement('div');
+            stepDiv.classList.add('step');
+            stepDiv.innerHTML = `
+                <strong>Step:</strong> ${step.action}<br>
+                <strong>Current Character:</strong> ${step.token}<br>
+                <strong>Action:</strong> ${step.action}<br>
+                <strong>Postfix Expression:</strong> ${step.postfix}<br>
+                <strong>Stack:</strong> ${step.stack}
+            `;
+            stepsDiv.appendChild(stepDiv);
+        });
+
+        // Display visuals
+        const visualsDiv = document.getElementById('visuals');
+        visuals.forEach(visual => {
+            const visualDiv = document.createElement('div');
+            visualDiv.classList.add('visual');
+            visualDiv.innerHTML = `
+                <div class="code">${visual.code}</div>
+            `;
+            visualsDiv.appendChild(visualDiv);
+        });
+
+        // Display final postfix
+        const finalPostfixDiv = document.getElementById('final-postfix');
+        finalPostfixDiv.textContent = postfix;
+    }
+</script>
+
+</body>
+</html>
